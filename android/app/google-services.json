@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "988898805495",
+    "project_id": "calendar-to-weiguel",
+    "storage_bucket": "calendar-to-weiguel.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:988898805495:android:35eae3758b0d6c262bf5f2",
+        "android_client_info": {
+          "package_name": "com.example.calendar_to_weiguel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB567Zm14UId7a0Ofm5GniatPB3i2sYFNU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
