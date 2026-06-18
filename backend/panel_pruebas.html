@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Panel de pruebas - calendar_to_weiguel</title>
+<style>
+  body{ font-family: sans-serif; max-width: 700px; margin: 30px auto; padding: 0 16px; background:#f4f1ec; color:#333; }
+  h1{ font-size: 20px; }
+  h2{ font-size: 16px; margin-top: 30px; border-bottom: 2px solid #6B7FD4; padding-bottom: 4px; }
+  h3{ font-size: 14px; margin-top: 16px; }
+  label{ display:block; margin-top:8px; font-size:13px; font-weight:bold; }
+  input, select, textarea{ width:100%; padding:6px; margin-top:2px; box-sizing:border-box; }
+  button{ margin-top:10px; padding:8px 16px; background:#6B7FD4; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
+  button:hover{ background:#5a6ec0; }
+  pre{ background:#222; color:#0f0; padding:10px; border-radius:6px; overflow:auto; max-height:200px; font-size:12px; }
+  .row{ display:flex; gap:10px; }
+  .row > div{ flex:1; }
+</style>
+</head>
+<body>
+<h1>🧪 Panel de pruebas — calendar_to_weiguel</h1>
+
+<!-- EVENTOS -->
+<h2>📅 Eventos</h2>
+<button onclick="get('listar_eventos', {}, 'out-ev-listar')">Listar eventos</button>
+<pre id="out-ev-listar">(resultado aquí)</pre>
+
+<h3>Crear evento</h3>
+<label>Título</label><input id="ev-titulo" value="Cena de prueba">
+<div class="row">
+  <div><label>Fecha (YYYY-MM-DD)</label><input id="ev-fecha" value="2026-06-25"></div>
+  <div><label>Hora (HH:MM:SS)</label><input id="ev-hora" value="20:30:00"></div>
+</div>
+<label>Recordatorio (min)</label><input id="ev-rec" value="60">
+<label>Color</label><input id="ev-color" value="#6B7FD4">
+<button onclick="post({accion:'crear_evento',titulo:v('ev-titulo'),fecha:v('ev-fecha'),hora:v('ev-hora'),recordatorio_minutos:v('ev-rec'),color:v('ev-color')},'out-ev-crear')">Crear evento</button>
+<pre id="out-ev-crear">(resultado aquí)</pre>
+
+<h3>Borrar evento</h3>
+<label>ID</label><input id="ev-del-id" value="1">
+<button onclick="post({accion:'borrar_evento',id:v('ev-del-id')},'out-ev-borrar')">Borrar evento</button>
+<pre id="out-ev-borrar">(resultado aquí)</pre>
+
+<!-- NOTAS -->
+<h2>📝 Notas</h2>
+<button onclick="get('listar_notas', {}, 'out-nt-listar')">Listar notas</button>
+<pre id="out-nt-listar">(resultado aquí)</pre>
+
+<h3>Crear nota</h3>
+<label>Título</label><input id="nt-titulo" value="El Drama">
+<label>Tipo</label>
+<select id="nt-tipo">
+  <option value="peli">Peli</option>
+  <option value="serie">Serie</option>
+  <option value="idea_cita">Idea de cita</option>
+  <option value="otro">Otro</option>
+</select>
+<label>Descripción</label><textarea id="nt-desc">Pendiente de ver</textarea>
+<button onclick="post({accion:'crear_nota',titulo:v('nt-titulo'),tipo:v('nt-tipo'),descripcion:v('nt-desc')},'out-nt-crear')">Crear nota</button>
+<pre id="out-nt-crear">(resultado aquí)</pre>
+
+<h3>Borrar nota</h3>
+<label>ID</label><input id="nt-del-id" value="1">
+<button onclick="post({accion:'borrar_nota',id:v('nt-del-id')},'out-nt-borrar')">Borrar nota</button>
+<pre id="out-nt-borrar">(resultado aquí)</pre>
+
+<!-- DISPOSITIVOS -->
+<h2>📱 Dispositivos / Vinculación</h2>
+<button onclick="get('listar_dispositivos', {}, 'out-dev-listar')">Listar dispositivos</button>
+<pre id="out-dev-listar">(resultado aquí)</pre>
+
+<h3>Registrar dispositivo</h3>
+<label>Dispositivo ID</label><input id="dev-id" value="dispositivo_prueba_pareja">
+<label>Nombre</label><input id="dev-nombre" value="Marta">
+<button onclick="post({accion:'registrar_dispositivo',dispositivo_id:v('dev-id'),nombre:v('dev-nombre')},'out-dev-registrar')">Registrar</button>
+<pre id="out-dev-registrar">(resultado aquí)</pre>
+
+<h3>Vincular dispositivo (introducir código del otro)</h3>
+<label>Dispositivo ID (el que se vincula)</label><input id="vin-dev-id" value="dispositivo_prueba_pareja">
+<label>Código del otro dispositivo</label><input id="vin-codigo" value="22621F">
+<button onclick="post({accion:'vincular_dispositivo',dispositivo_id:v('vin-dev-id'),codigo:v('vin-codigo')},'out-vin')">Vincular</button>
+<pre id="out-vin">(resultado aquí)</pre>
+
+<h3>Obtener dispositivo</h3>
+<label>Dispositivo ID</label><input id="get-dev-id" value="dispositivo_prueba_pareja">
+<button onclick="post({accion:'obtener_dispositivo',dispositivo_id:v('get-dev-id')},'out-get-dev')">Obtener</button>
+<pre id="out-get-dev">(resultado aquí)</pre>
+
+<script>
+const BASE = 'http://localhost/calendar_to_weiguel/api.php';
+const v = id => document.getElementById(id).value;
+
+async function post(datos, outId) {
+  try {
+    const res = await fetch(BASE, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(datos)
+    });
+    document.getElementById(outId).textContent = JSON.stringify(await res.json(), null, 2);
+  } catch(e) {
+    document.getElementById(outId).textContent = 'Error: ' + e;
+  }
+}
+
+async function get(accion, extra, outId) {
+  post({accion, ...extra}, outId);
+}
+</script>
+</body>
+</html>

@@ -119,6 +119,64 @@ class ApiService {
   static Future<Map<String, dynamic>> borrarNota({required int id}) async {
     return _post({"accion": "borrar_nota", "id": id});
   }
+
+  // -------------------------------------------------------
+  // PLANNER
+  // -------------------------------------------------------
+
+  /// Obtiene los contenidos de los 7 días y las tareas de una semana.
+  /// [semanaInicio] es el lunes de esa semana en formato "YYYY-MM-DD".
+  static Future<Map<String, dynamic>> obtenerSemanaPlanner({
+    required String semanaInicio,
+  }) async {
+    return _post({
+      "accion": "obtener_semana_planner",
+      "semana_inicio": semanaInicio,
+    });
+  }
+
+  /// Guarda o actualiza el contenido de texto de un día.
+  static Future<Map<String, dynamic>> guardarDiaPlanner({
+    required String fecha,
+    required String contenido,
+  }) async {
+    return _post({
+      "accion": "guardar_dia_planner",
+      "fecha": fecha,
+      "contenido": contenido,
+    });
+  }
+
+  /// Crea una tarea nueva en el To Do List de la semana.
+  static Future<Map<String, dynamic>> crearTareaPlanner({
+    required String semanaInicio,
+    required String titulo,
+  }) async {
+    return _post({
+      "accion": "crear_tarea_planner",
+      "semana_inicio": semanaInicio,
+      "titulo": titulo,
+    });
+  }
+
+  /// Marca o desmarca una tarea como completada.
+  static Future<Map<String, dynamic>> toggleTareaPlanner({
+    required int id,
+    required int completado,
+  }) async {
+    return _post({
+      "accion": "toggle_tarea_planner",
+      "id": id,
+      "completado": completado,
+    });
+  }
+
+  /// Elimina una tarea del To Do List.
+  static Future<Map<String, dynamic>> borrarTareaPlanner({
+    required int id,
+  }) async {
+    return _post({"accion": "borrar_tarea_planner", "id": id});
+  }
   // -------------------------------------------------------
   // TIPOS DE NOTA
   // -------------------------------------------------------
@@ -137,5 +195,39 @@ class ApiService {
     String color = '#4A4A4A',
   }) async {
     return _post({"accion": "crear_tipo", "nombre": nombre, "color": color});
+  }
+  // -------------------------------------------------------
+  // DISPOSITIVOS / VINCULACIÓN
+  // -------------------------------------------------------
+
+  static Future<Map<String, dynamic>> registrarDispositivo({
+    required String dispositivoId,
+    required String nombre,
+  }) async {
+    return _post({
+      "accion": "registrar_dispositivo",
+      "dispositivo_id": dispositivoId,
+      "nombre": nombre,
+    });
+  }
+
+  static Future<Map<String, dynamic>> vincularDispositivo({
+    required String dispositivoId,
+    required String codigo,
+  }) async {
+    return _post({
+      "accion": "vincular_dispositivo",
+      "dispositivo_id": dispositivoId,
+      "codigo": codigo,
+    });
+  }
+
+  static Future<Map<String, dynamic>> obtenerDispositivo({
+    required String dispositivoId,
+  }) async {
+    return _post({
+      "accion": "obtener_dispositivo",
+      "dispositivo_id": dispositivoId,
+    });
   }
 }

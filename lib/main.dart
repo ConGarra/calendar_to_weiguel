@@ -5,16 +5,27 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/nota_screen.dart';
 import 'utils/color_utils.dart';
+import 'screens/proximos_screen.dart';
+import 'screens/ajustes_screen.dart';
+import 'services/dispositivo_service.dart';
+import 'services/sesion_service.dart';
+import 'screens/planner_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await initializeDateFormatting('es_ES', null);
-  runApp(const MyApp());
+  await DispositivoService.inicializar(nombre: 'Usuario');
+
+  // Comprobamos si este dispositivo es el de Sandra
+  final esSandra = await SesionService.esDispositivoDeSandra();
+
+  runApp(MyApp(esSandra: esSandra));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool esSandra;
+  const MyApp({super.key, required this.esSandra});
 
   @override
   Widget build(BuildContext context) {
@@ -31,49 +42,67 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: kColorPrimario),
       ),
-      home: const MainScreen(),
+      home: MainScreen(esSandra: esSandra),
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final bool esSandra;
+  const MainScreen({super.key, required this.esSandra});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // Índice de la pestaña activa: 0 = Calendario, 1 = Notas
   int _indiceActivo = 0;
-
-  // Las dos pantallas — se crean una vez y no se destruyen al cambiar pestaña
-  final List<Widget> _pantallas = const [
-    CalendarScreen(),
-    NotesScreen(),
-  ];
 
   @override
   Widget build(BuildContext context) {
+    // Pantallas según el dispositivo
+    final pantallas = [
+      const CalendarScreen(),
+      const ProximosScreen(),
+      const NotesScreen(),
+      if (widget.esSandra) const PlannerScreen(), // solo para Sandra
+      const AjustesScreen(),
+    ];
+
+    final items = [
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.calendar_month),
+        label: 'Calendario',
+      ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.hourglass_top),
+        label: 'Próximos',
+      ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.sticky_note_2_outlined),
+        label: 'Notas',
+      ),
+      if (widget.esSandra)
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.view_week_outlined),
+          label: 'Planner',
+        ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.settings_outlined),
+        label: 'Ajustes',
+      ),
+    ];
+
     return Scaffold(
-      // Muestra la pantalla activa según el índice
-      body: _pantallas[_indiceActivo],
+      body: pantallas[_indiceActivo],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _indiceActivo,
         onTap: (indice) => setState(() => _indiceActivo = indice),
         backgroundColor: kColorFondo,
         selectedItemColor: kColorPrimario,
         unselectedItemColor: kColorTextoSecundario,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: 'Calendario',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sticky_note_2_outlined),
-            label: 'Notas',
-          ),
-        ],
+        type: BottomNavigationBarType.fixed,
+        items: items,
       ),
     );
   }
