@@ -25,9 +25,10 @@ class NotaCardPendiente extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: kColorTarjeta,
           borderRadius: BorderRadius.circular(12),
           border: Border(left: BorderSide(color: color, width: 3)),
+          boxShadow: kSombraTarjeta,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

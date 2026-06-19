@@ -25,6 +25,28 @@ const kColorPasado = Color(0xFFB0ADC5);
 /// Color de acciones destructivas (eliminar).
 const kColorEliminar = Color(0xFFD44F4F);
 
+/// Fondo de tarjetas (blanco con leve tinte morado).
+const kColorTarjeta = Color(0xFFFBF9FF);
+
+/// Sombra estándar para tarjetas.
+// — Color(0x146B7FD4): kColorPrimario al 8% de opacidad (0x14 = 20 de 255)
+// — blurRadius 8: difuminado sutil
+// — offset (0, 2): la sombra cae 2px hacia abajo
+const List<BoxShadow> kSombraTarjeta = [
+  BoxShadow(
+    color: Color(0x146B7FD4),
+    blurRadius: 8,
+    offset: Offset(0, 2),
+  ),
+];
+
+/// Gradiente de fondo para las pantallas (crema arriba → lavanda suave abajo).
+const kGradienteFondo = LinearGradient(
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  colors: [Color(0xFFF7F3EE), Color(0xFFEFEBFF)],
+);
+
 // ---------------------------------------------------------------------------
 /// Colores disponibles para los eventos.
 const List<Color> kColoresEvento = [

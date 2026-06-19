@@ -77,19 +77,21 @@ class _ProximosScreenState extends State<ProximosScreen> {
           ),
         ),
       ),
-      body: _cargando
-          ? const Center(child: CircularProgressIndicator())
-          : _eventos.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No hay eventos próximos',
-                    style: TextStyle(color: kColorTextoSecundario),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: _eventos.length,
-                  itemBuilder: (context, index) {
+      body: Container(
+        decoration: const BoxDecoration(gradient: kGradienteFondo),
+        child: _cargando
+            ? const Center(child: CircularProgressIndicator())
+            : _eventos.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No hay eventos próximos',
+                      style: TextStyle(color: kColorTextoSecundario),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: _eventos.length,
+                    itemBuilder: (context, index) {
                     final ev = Map<String, dynamic>.from(_eventos[index]);
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,8 +123,9 @@ class _ProximosScreenState extends State<ProximosScreen> {
                         ),
                       ],
                     );
-                  },
-                ),
+                    },
+                  ),
+      ),
     );
   }
 

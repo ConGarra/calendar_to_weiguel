@@ -90,9 +90,11 @@ class _AjustesScreenState extends State<AjustesScreen> {
       ),
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
+          : Container(
+              decoration: const BoxDecoration(gradient: kGradienteFondo),
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
                 // Sección: Tu código
                 _buildSeccion(
                   titulo: 'Tu código de vinculación',
@@ -228,7 +230,8 @@ class _AjustesScreenState extends State<AjustesScreen> {
                     ],
                   ),
                 ),
-              ],
+                ],
+              ),
             ),
     );
   }
@@ -241,8 +244,9 @@ class _AjustesScreenState extends State<AjustesScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: kColorTarjeta,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: kSombraTarjeta,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

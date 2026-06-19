@@ -21,9 +21,10 @@ class EventoCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: kColorTarjeta,
           borderRadius: BorderRadius.circular(14),
           border: Border(left: BorderSide(color: color, width: 4)),
+          boxShadow: kSombraTarjeta,
         ),
         child: ListTile(
           title: Text(

@@ -31,6 +31,7 @@ class NotaCardCompletada extends StatelessWidget {
           color: kColorPanel.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(12),
           border: Border(left: BorderSide(color: color, width: 3)),
+          boxShadow: kSombraTarjeta,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

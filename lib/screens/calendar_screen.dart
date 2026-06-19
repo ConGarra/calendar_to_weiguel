@@ -80,15 +80,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ),
         child: const Icon(Icons.add),
       ),
-      body: _cargando
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                _buildCalendario(),
-                const Divider(height: 1),
-                _buildListaEventos(eventosDelDiaSeleccionado),
-              ],
-            ),
+      body: Container(
+        decoration: const BoxDecoration(gradient: kGradienteFondo),
+        child: _cargando
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  _buildCalendario(),
+                  const Divider(height: 1),
+                  _buildListaEventos(eventosDelDiaSeleccionado),
+                ],
+              ),
+      ),
     );
   }
 

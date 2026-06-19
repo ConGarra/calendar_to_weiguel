@@ -189,19 +189,21 @@ class _NotesScreenState extends State<NotesScreen> {
             mostrarFormularioNota(context, onGuardado: _cargarNotas),
         child: const Icon(Icons.add),
       ),
-      body: _cargando
-          ? const Center(child: CircularProgressIndicator())
-          : _notas.isEmpty
-          ? const Center(
-              child: Text(
-                'Sin notas todavía\nPulsa + para añadir',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: kColorTextoSecundario),
-              ),
-            )
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
+      body: Container(
+        decoration: const BoxDecoration(gradient: kGradienteFondo),
+        child: _cargando
+            ? const Center(child: CircularProgressIndicator())
+            : _notas.isEmpty
+            ? const Center(
+                child: Text(
+                  'Sin notas todavía\nPulsa + para añadir',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: kColorTextoSecundario),
+                ),
+              )
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
                 if (grupos['peli'] != null)
                   _buildGrupo(
                     '🎬 Pelis',
@@ -238,8 +240,9 @@ class _NotesScreenState extends State<NotesScreen> {
                         parsearColor(e.value['color'] as String?),
                       ),
                     ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 
@@ -253,30 +256,28 @@ class _NotesScreenState extends State<NotesScreen> {
       return const SizedBox.shrink();
     }
 
-    // Color más oscuro para el degradado
-    final colorOscuro = Color.fromARGB(
-      255,
-      (color.r * 0.7).toInt(),
-      (color.g * 0.7).toInt(),
-      (color.b * 0.7).toInt(),
-    );
-
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [colorOscuro, color],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        // El cuerpo del grupo es blanco tintado, igual que el resto de tarjetas
+        color: kColorTarjeta,
         borderRadius: BorderRadius.circular(20),
+        boxShadow: kSombraTarjeta,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Cabecera del grupo
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+          // Franja superior con el color sólido de la categoría
+          // — solo ocupa el título, las esquinas superiores van redondeadas
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+            ),
             child: Text(
               titulo,
               style: const TextStyle(
@@ -288,18 +289,18 @@ class _NotesScreenState extends State<NotesScreen> {
           ),
 
           // Cabeceras de columna
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10),
+          Padding(
+            padding: const EdgeInsets.only(top: 10, left: 10, right: 10),
             child: Row(
-              children: [
+              children: const [
                 Expanded(
                   child: Text(
                     'Pendientes',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white70,
+                      color: kColorTextoOscuro,
                       letterSpacing: 0.05,
                     ),
                   ),
@@ -309,9 +310,9 @@ class _NotesScreenState extends State<NotesScreen> {
                     'Completadas',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white70,
+                      color: kColorTextoOscuro,
                       letterSpacing: 0.05,
                     ),
                   ),
@@ -321,7 +322,7 @@ class _NotesScreenState extends State<NotesScreen> {
           ),
           const SizedBox(height: 6),
 
-          // Dos columnas
+          // Dos columnas de tarjetas
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 14),
             child: IntrinsicHeight(
@@ -339,8 +340,8 @@ class _NotesScreenState extends State<NotesScreen> {
                                 child: const Text(
                                   '¡Todo hecho! 🎉',
                                   style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.white60,
+                                    fontSize: 13,
+                                    color: kColorTextoOscuro,
                                   ),
                                 ),
                               ),
@@ -371,8 +372,8 @@ class _NotesScreenState extends State<NotesScreen> {
                                 child: const Text(
                                   'Aún sin completar',
                                   style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.white60,
+                                    fontSize: 13,
+                                    color: kColorTextoOscuro,
                                   ),
                                 ),
                               ),
