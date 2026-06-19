@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/color_utils.dart';
 import '../utils/date_utils.dart';
+import '../services/notificacion_service.dart';
 
 /// Muestra el bottom sheet para crear un nuevo evento.
 /// [fechaInicial] es el día seleccionado en el calendario.
@@ -67,7 +68,10 @@ void mostrarFormularioEvento(
                   // Fecha
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.calendar_today, color: kColorPrimario),
+                    leading: const Icon(
+                      Icons.calendar_today,
+                      color: kColorPrimario,
+                    ),
                     title: Text(
                       '${fechaSeleccionada.day}/${fechaSeleccionada.month}/${fechaSeleccionada.year}',
                       style: const TextStyle(fontWeight: FontWeight.w600),
@@ -90,7 +94,10 @@ void mostrarFormularioEvento(
                   // Hora
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.access_time, color: kColorPrimario),
+                    leading: const Icon(
+                      Icons.access_time,
+                      color: kColorPrimario,
+                    ),
                     title: Text(
                       horaSeleccionada != null
                           ? '${horaSeleccionada!.hour.toString().padLeft(2, '0')}:${horaSeleccionada!.minute.toString().padLeft(2, '0')}'
@@ -112,7 +119,10 @@ void mostrarFormularioEvento(
                   // Recordatorio
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.notifications_none, color: kColorPrimario),
+                    leading: const Icon(
+                      Icons.notifications_none,
+                      color: kColorPrimario,
+                    ),
                     title: Text(
                       recordatorioMinutos != null
                           ? '$recordatorioMinutos min antes'
@@ -159,19 +169,34 @@ void mostrarFormularioEvento(
                       ),
                       onPressed: () async {
                         if (tituloController.text.trim().isEmpty) return;
-                        await ApiService.crearEvento(
+                        final respuesta = await ApiService.crearEvento(
                           titulo: tituloController.text.trim(),
                           fecha: formatearFecha(fechaSeleccionada),
                           hora: formatearHora(horaSeleccionada),
                           recordatorioMinutos: recordatorioMinutos,
                           color: colorAHex(colorSeleccionado),
                         );
+                        // Programar recordatorio si tiene hora y recordatorio
+                        if (horaSeleccionada != null &&
+                            recordatorioMinutos != null &&
+                            respuesta['id'] != null) {
+                          await NotificacionService.programarRecordatorio(
+                            idEvento: int.parse(respuesta['id'].toString()),
+                            tituloEvento: tituloController.text.trim(),
+                            fechaEvento: fechaSeleccionada,
+                            horaEvento: horaSeleccionada!,
+                            minutosAntes: recordatorioMinutos!,
+                          );
+                        }
                         if (context.mounted) Navigator.pop(context);
                         await onGuardado();
                       },
                       child: const Text(
                         'Guardar evento',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -200,7 +225,9 @@ void _mostrarDialogoRecordatorio(
       children: [
         ...[15, 30, 60, 120].map(
           (min) => SimpleDialogOption(
-            child: Text(min < 60 ? '$min minutos antes' : '${min ~/ 60}h antes'),
+            child: Text(
+              min < 60 ? '$min minutos antes' : '${min ~/ 60}h antes',
+            ),
             onPressed: () {
               onSeleccionado(min);
               Navigator.pop(context);

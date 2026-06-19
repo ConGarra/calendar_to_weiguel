@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/color_utils.dart';
 import '../utils/date_utils.dart';
+import '../services/notificacion_service.dart';
 
 /// Muestra el bottom sheet de detalle y edición de un evento existente.
 /// [evento] es el map con los datos del evento.
@@ -11,8 +12,9 @@ void mostrarDetalleEvento(
   required Map<String, dynamic> evento,
   required Future<void> Function() onActualizado,
 }) {
-  final tituloController =
-      TextEditingController(text: evento['titulo'] as String? ?? '');
+  final tituloController = TextEditingController(
+    text: evento['titulo'] as String? ?? '',
+  );
   DateTime fechaSeleccionada = DateTime.parse(evento['fecha'] as String);
   TimeOfDay? horaSeleccionada;
 
@@ -114,7 +116,10 @@ void mostrarDetalleEvento(
                   // Fecha
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.calendar_today, color: kColorPrimario),
+                    leading: const Icon(
+                      Icons.calendar_today,
+                      color: kColorPrimario,
+                    ),
                     title: Text(
                       '${fechaSeleccionada.day}/${fechaSeleccionada.month}/${fechaSeleccionada.year}',
                       style: const TextStyle(fontWeight: FontWeight.w600),
@@ -139,7 +144,10 @@ void mostrarDetalleEvento(
                   // Hora
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.access_time, color: kColorPrimario),
+                    leading: const Icon(
+                      Icons.access_time,
+                      color: kColorPrimario,
+                    ),
                     title: Text(
                       horaSeleccionada != null
                           ? '${horaSeleccionada!.hour.toString().padLeft(2, '0')}:${horaSeleccionada!.minute.toString().padLeft(2, '0')}'
@@ -163,7 +171,10 @@ void mostrarDetalleEvento(
                   // Recordatorio
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.notifications_none, color: kColorPrimario),
+                    leading: const Icon(
+                      Icons.notifications_none,
+                      color: kColorPrimario,
+                    ),
                     title: Text(
                       recordatorioMinutos != null
                           ? '$recordatorioMinutos min antes'
@@ -173,11 +184,11 @@ void mostrarDetalleEvento(
                     subtitle: const Text('Recordatorio (opcional)'),
                     onTap: editando
                         ? () => _mostrarDialogoRecordatorio(
-                              context,
-                              onSeleccionado: (valor) => setModalState(
-                                () => recordatorioMinutos = valor,
-                              ),
-                            )
+                            context,
+                            onSeleccionado: (valor) => setModalState(
+                              () => recordatorioMinutos = valor,
+                            ),
+                          )
                         : null,
                   ),
 
@@ -217,20 +228,38 @@ void mostrarDetalleEvento(
                         ),
                         onPressed: () async {
                           if (tituloController.text.trim().isEmpty) return;
+                          final idEvento = int.parse(evento['id'].toString());
                           await ApiService.editarEvento(
-                            id: int.parse(evento['id'].toString()),
+                            id: idEvento,
                             titulo: tituloController.text.trim(),
                             fecha: formatearFecha(fechaSeleccionada),
                             hora: formatearHora(horaSeleccionada),
                             recordatorioMinutos: recordatorioMinutos,
                             color: colorAHex(colorSeleccionado),
                           );
+                          // Cancelar anterior y reprogramar si aplica
+                          await NotificacionService.cancelarRecordatorio(
+                            idEvento,
+                          );
+                          if (horaSeleccionada != null &&
+                              recordatorioMinutos != null) {
+                            await NotificacionService.programarRecordatorio(
+                              idEvento: idEvento,
+                              tituloEvento: tituloController.text.trim(),
+                              fechaEvento: fechaSeleccionada,
+                              horaEvento: horaSeleccionada!,
+                              minutosAntes: recordatorioMinutos!,
+                            );
+                          }
                           if (context.mounted) Navigator.pop(context);
                           await onActualizado();
                         },
                         child: const Text(
                           'Guardar cambios',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
@@ -275,6 +304,7 @@ void _confirmarBorrado(
   ).then((confirmar) async {
     if (confirmar == true) {
       await ApiService.borrarEvento(id: idEvento);
+      await NotificacionService.cancelarRecordatorio(idEvento);
       await onBorrado();
     }
   });
@@ -291,7 +321,9 @@ void _mostrarDialogoRecordatorio(
       children: [
         ...[15, 30, 60, 120].map(
           (min) => SimpleDialogOption(
-            child: Text(min < 60 ? '$min minutos antes' : '${min ~/ 60}h antes'),
+            child: Text(
+              min < 60 ? '$min minutos antes' : '${min ~/ 60}h antes',
+            ),
             onPressed: () {
               onSeleccionado(min);
               Navigator.pop(context);

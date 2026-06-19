@@ -10,12 +10,14 @@ import 'screens/ajustes_screen.dart';
 import 'services/dispositivo_service.dart';
 import 'services/sesion_service.dart';
 import 'screens/planner_screen.dart';
+import 'services/notificacion_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await initializeDateFormatting('es_ES', null);
   await DispositivoService.inicializar(nombre: 'Usuario');
+  await NotificacionService.inicializar();
 
   // Comprobamos si este dispositivo es el de Sandra
   final esSandra = await SesionService.esDispositivoDeSandra();
