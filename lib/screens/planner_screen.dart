@@ -62,7 +62,10 @@ class _PlannerScreenState extends State<PlannerScreen> {
         semanaInicio: date_utils.formatearFecha(_semanaInicio),
       );
       if (respuesta['exito'] == true) {
-        final dias = Map<String, dynamic>.from(respuesta['dias'] as Map);
+        final diasRaw = respuesta['dias'];
+        final dias = diasRaw is Map
+            ? Map<String, dynamic>.from(diasRaw)
+            : <String, dynamic>{};
         setState(() {
           _contenidoDias = dias.map((k, v) => MapEntry(k, v as String? ?? ''));
           _tareas = respuesta['tareas'] as List<dynamic>;
