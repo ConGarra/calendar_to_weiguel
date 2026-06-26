@@ -17,16 +17,20 @@ class SesionService {
     }
 
     // Si no, consultamos el backend
-    final dispositivoId = await DispositivoService.obtenerDispositivoId();
-    final respuesta =
-        await ApiService.obtenerDispositivo(dispositivoId: dispositivoId);
+    try {
+      final dispositivoId = await DispositivoService.obtenerDispositivoId();
+      final respuesta =
+          await ApiService.obtenerDispositivo(dispositivoId: dispositivoId);
 
-    if (respuesta['exito'] == true) {
-      final nombre =
-          (respuesta['dispositivo']['nombre'] as String).toLowerCase();
-      final esSandra = nombre == 'sandra';
-      await prefs.setBool(_keyEsSandra, esSandra);
-      return esSandra;
+      if (respuesta['exito'] == true) {
+        final nombre =
+            (respuesta['dispositivo']['nombre'] as String).toLowerCase();
+        final esSandra = nombre == 'sandra';
+        await prefs.setBool(_keyEsSandra, esSandra);
+        return esSandra;
+      }
+    } catch (_) {
+      // Si falla la consulta al servidor, no se puede determinar el rol
     }
 
     return false;

@@ -169,27 +169,30 @@ void mostrarFormularioEvento(
                       ),
                       onPressed: () async {
                         if (tituloController.text.trim().isEmpty) return;
-                        final respuesta = await ApiService.crearEvento(
-                          titulo: tituloController.text.trim(),
-                          fecha: formatearFecha(fechaSeleccionada),
-                          hora: formatearHora(horaSeleccionada),
-                          recordatorioMinutos: recordatorioMinutos,
-                          color: colorAHex(colorSeleccionado),
-                        );
-                        // Programar recordatorio si tiene hora y recordatorio
-                        if (horaSeleccionada != null &&
-                            recordatorioMinutos != null &&
-                            respuesta['id'] != null) {
-                          await NotificacionService.programarRecordatorio(
-                            idEvento: int.parse(respuesta['id'].toString()),
-                            tituloEvento: tituloController.text.trim(),
-                            fechaEvento: fechaSeleccionada,
-                            horaEvento: horaSeleccionada!,
-                            minutosAntes: recordatorioMinutos!,
+                        try {
+                          final respuesta = await ApiService.crearEvento(
+                            titulo: tituloController.text.trim(),
+                            fecha: formatearFecha(fechaSeleccionada),
+                            hora: formatearHora(horaSeleccionada),
+                            recordatorioMinutos: recordatorioMinutos,
+                            color: colorAHex(colorSeleccionado),
                           );
+                          if (horaSeleccionada != null &&
+                              recordatorioMinutos != null &&
+                              respuesta['id'] != null) {
+                            await NotificacionService.programarRecordatorio(
+                              idEvento: int.parse(respuesta['id'].toString()),
+                              tituloEvento: tituloController.text.trim(),
+                              fechaEvento: fechaSeleccionada,
+                              horaEvento: horaSeleccionada!,
+                              minutosAntes: recordatorioMinutos!,
+                            );
+                          }
+                          if (context.mounted) Navigator.pop(context);
+                          await onGuardado();
+                        } catch (_) {
+                          // Error de red — el sheet se queda abierto para reintentar
                         }
-                        if (context.mounted) Navigator.pop(context);
-                        await onGuardado();
                       },
                       child: const Text(
                         'Guardar evento',

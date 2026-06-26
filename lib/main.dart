@@ -16,11 +16,20 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await initializeDateFormatting('es_ES', null);
-  await DispositivoService.inicializar(nombre: 'Usuario');
+  try {
+    await DispositivoService.inicializar(nombre: 'Usuario');
+  } catch (_) {
+    // Si el servidor no está disponible al arrancar, la app sigue cargando
+  }
+
   await NotificacionService.inicializar();
 
-  // Comprobamos si este dispositivo es el de Sandra
-  final esSandra = await SesionService.esDispositivoDeSandra();
+  bool esSandra = false;
+  try {
+    esSandra = await SesionService.esDispositivoDeSandra();
+  } catch (_) {
+    // Si falla la consulta, se asume que no es Sandra
+  }
 
   runApp(MyApp(esSandra: esSandra));
 }

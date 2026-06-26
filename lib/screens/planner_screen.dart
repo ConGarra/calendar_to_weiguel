@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/color_utils.dart';
+import '../widgets/error_red_widget.dart';
 import '../utils/date_utils.dart' as date_utils;
 import 'dart:convert';
+import 'dart:async';
 
 class PlannerScreen extends StatefulWidget {
   const PlannerScreen({super.key});
@@ -17,7 +19,9 @@ class _PlannerScreenState extends State<PlannerScreen> {
   Map<String, String> _contenidoDias = {};
   List<dynamic> _tareas = [];
   bool _cargando = true;
+  bool _errorRed = false;
   final _tareaController = TextEditingController();
+  Timer? _timer;
 
   // Nombres de los días en español
   static const _nombresDias = [
@@ -42,10 +46,17 @@ class _PlannerScreenState extends State<PlannerScreen> {
       _semanaInicio.day,
     );
     _cargarSemana();
+    _timer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _cargarSemana(),
+    );
   }
 
   Future<void> _cargarSemana() async {
-    setState(() => _cargando = true);
+    setState(() {
+      _cargando = true;
+      _errorRed = false;
+    });
     try {
       final respuesta = await ApiService.obtenerSemanaPlanner(
         semanaInicio: date_utils.formatearFecha(_semanaInicio),
@@ -59,7 +70,10 @@ class _PlannerScreenState extends State<PlannerScreen> {
         });
       }
     } catch (e) {
-      setState(() => _cargando = false);
+      setState(() {
+        _cargando = false;
+        _errorRed = true;
+      });
     }
   }
 
@@ -272,13 +286,17 @@ class _PlannerScreenState extends State<PlannerScreen> {
                     ),
                   ),
                   onPressed: () async {
-                    final nuevoContenido = _serializarItems(items);
-                    await ApiService.guardarDiaPlanner(
-                      fecha: fechaStr,
-                      contenido: nuevoContenido,
-                    );
-                    setState(() => _contenidoDias[fechaStr] = nuevoContenido);
-                    if (context.mounted) Navigator.pop(context);
+                    try {
+                      final nuevoContenido = _serializarItems(items);
+                      await ApiService.guardarDiaPlanner(
+                        fecha: fechaStr,
+                        contenido: nuevoContenido,
+                      );
+                      setState(() => _contenidoDias[fechaStr] = nuevoContenido);
+                      if (context.mounted) Navigator.pop(context);
+                    } catch (_) {
+                      // Error de red — el modal se queda abierto
+                    }
                   },
                   child: const Text(
                     'Guardar',
@@ -296,26 +314,38 @@ class _PlannerScreenState extends State<PlannerScreen> {
   Future<void> _crearTarea() async {
     final titulo = _tareaController.text.trim();
     if (titulo.isEmpty) return;
-    await ApiService.crearTareaPlanner(
-      semanaInicio: date_utils.formatearFecha(_semanaInicio),
-      titulo: titulo,
-    );
-    _tareaController.clear();
-    await _cargarSemana();
+    try {
+      await ApiService.crearTareaPlanner(
+        semanaInicio: date_utils.formatearFecha(_semanaInicio),
+        titulo: titulo,
+      );
+      _tareaController.clear();
+      await _cargarSemana();
+    } catch (_) {
+      // Error de red
+    }
   }
 
   Future<void> _toggleTarea(Map<String, dynamic> tarea) async {
-    final completado = tarea['completado'].toString() == '1' ? 0 : 1;
-    await ApiService.toggleTareaPlanner(
-      id: int.parse(tarea['id'].toString()),
-      completado: completado,
-    );
-    await _cargarSemana();
+    try {
+      final completado = tarea['completado'].toString() == '1' ? 0 : 1;
+      await ApiService.toggleTareaPlanner(
+        id: int.parse(tarea['id'].toString()),
+        completado: completado,
+      );
+      await _cargarSemana();
+    } catch (_) {
+      // Error de red
+    }
   }
 
   Future<void> _borrarTarea(int id) async {
-    await ApiService.borrarTareaPlanner(id: id);
-    await _cargarSemana();
+    try {
+      await ApiService.borrarTareaPlanner(id: id);
+      await _cargarSemana();
+    } catch (_) {
+      // Error de red
+    }
   }
 
   // Convierte el contenido JSON a una lista de ítems.
@@ -341,15 +371,19 @@ class _PlannerScreenState extends State<PlannerScreen> {
 
   // Toca una línea en la vista del día → la tacha/destacha y guarda automáticamente.
   Future<void> _toggleItemDia(String fechaStr, int index) async {
-    final items = _parsearItems(_contenidoDias[fechaStr] ?? '');
-    if (index >= items.length) return;
-    items[index]['h'] = !(items[index]['h'] as bool? ?? false);
-    final nuevoContenido = _serializarItems(items);
-    await ApiService.guardarDiaPlanner(
-      fecha: fechaStr,
-      contenido: nuevoContenido,
-    );
-    setState(() => _contenidoDias[fechaStr] = nuevoContenido);
+    try {
+      final items = _parsearItems(_contenidoDias[fechaStr] ?? '');
+      if (index >= items.length) return;
+      items[index]['h'] = !(items[index]['h'] as bool? ?? false);
+      final nuevoContenido = _serializarItems(items);
+      await ApiService.guardarDiaPlanner(
+        fecha: fechaStr,
+        contenido: nuevoContenido,
+      );
+      setState(() => _contenidoDias[fechaStr] = nuevoContenido);
+    } catch (_) {
+      // Error de red
+    }
   }
 
   @override
@@ -369,7 +403,9 @@ class _PlannerScreenState extends State<PlannerScreen> {
       ),
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
-          : Container(
+          : _errorRed
+              ? ErrorRedWidget(onReintentar: _cargarSemana)
+              : Container(
               decoration: const BoxDecoration(gradient: kGradienteFondo),
               child: ListView(
                 padding: const EdgeInsets.all(16),
@@ -664,6 +700,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     _tareaController.dispose();
     super.dispose();
   }

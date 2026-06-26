@@ -228,31 +228,34 @@ void mostrarDetalleEvento(
                         ),
                         onPressed: () async {
                           if (tituloController.text.trim().isEmpty) return;
-                          final idEvento = int.parse(evento['id'].toString());
-                          await ApiService.editarEvento(
-                            id: idEvento,
-                            titulo: tituloController.text.trim(),
-                            fecha: formatearFecha(fechaSeleccionada),
-                            hora: formatearHora(horaSeleccionada),
-                            recordatorioMinutos: recordatorioMinutos,
-                            color: colorAHex(colorSeleccionado),
-                          );
-                          // Cancelar anterior y reprogramar si aplica
-                          await NotificacionService.cancelarRecordatorio(
-                            idEvento,
-                          );
-                          if (horaSeleccionada != null &&
-                              recordatorioMinutos != null) {
-                            await NotificacionService.programarRecordatorio(
-                              idEvento: idEvento,
-                              tituloEvento: tituloController.text.trim(),
-                              fechaEvento: fechaSeleccionada,
-                              horaEvento: horaSeleccionada!,
-                              minutosAntes: recordatorioMinutos!,
+                          try {
+                            final idEvento = int.parse(evento['id'].toString());
+                            await ApiService.editarEvento(
+                              id: idEvento,
+                              titulo: tituloController.text.trim(),
+                              fecha: formatearFecha(fechaSeleccionada),
+                              hora: formatearHora(horaSeleccionada),
+                              recordatorioMinutos: recordatorioMinutos,
+                              color: colorAHex(colorSeleccionado),
                             );
+                            await NotificacionService.cancelarRecordatorio(
+                              idEvento,
+                            );
+                            if (horaSeleccionada != null &&
+                                recordatorioMinutos != null) {
+                              await NotificacionService.programarRecordatorio(
+                                idEvento: idEvento,
+                                tituloEvento: tituloController.text.trim(),
+                                fechaEvento: fechaSeleccionada,
+                                horaEvento: horaSeleccionada!,
+                                minutosAntes: recordatorioMinutos!,
+                              );
+                            }
+                            if (context.mounted) Navigator.pop(context);
+                            await onActualizado();
+                          } catch (_) {
+                            // Error de red — el sheet se queda abierto
                           }
-                          if (context.mounted) Navigator.pop(context);
-                          await onActualizado();
                         },
                         child: const Text(
                           'Guardar cambios',
@@ -303,9 +306,13 @@ void _confirmarBorrado(
     ),
   ).then((confirmar) async {
     if (confirmar == true) {
-      await ApiService.borrarEvento(id: idEvento);
-      await NotificacionService.cancelarRecordatorio(idEvento);
-      await onBorrado();
+      try {
+        await ApiService.borrarEvento(id: idEvento);
+        await NotificacionService.cancelarRecordatorio(idEvento);
+        await onBorrado();
+      } catch (_) {
+        // Error de red al borrar
+      }
     }
   });
 }

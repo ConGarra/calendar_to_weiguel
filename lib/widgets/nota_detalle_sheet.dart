@@ -150,19 +150,23 @@ void mostrarDetalleNota(
                         ),
                         onPressed: () async {
                           if (tituloController.text.trim().isEmpty) return;
-                          await ApiService.editarNota(
-                            id: int.parse(nota['id'].toString()),
-                            titulo: tituloController.text.trim(),
-                            tipo: tipoSeleccionado,
-                            descripcion:
-                                descripcionController.text.trim().isEmpty
-                                    ? null
-                                    : descripcionController.text.trim(),
-                            completado: nota['completado'].toString() == '1' ? 1 : 0,
-                            puntuacion: puntuacion,
-                          );
-                          if (context.mounted) Navigator.pop(context);
-                          await onActualizado();
+                          try {
+                            await ApiService.editarNota(
+                              id: int.parse(nota['id'].toString()),
+                              titulo: tituloController.text.trim(),
+                              tipo: tipoSeleccionado,
+                              descripcion:
+                                  descripcionController.text.trim().isEmpty
+                                      ? null
+                                      : descripcionController.text.trim(),
+                              completado: nota['completado'].toString() == '1' ? 1 : 0,
+                              puntuacion: puntuacion,
+                            );
+                            if (context.mounted) Navigator.pop(context);
+                            await onActualizado();
+                          } catch (_) {
+                            // Error de red — el sheet se queda abierto
+                          }
                         },
                         child: const Text(
                           'Guardar cambios',

@@ -38,6 +38,7 @@ switch ($accion) {
         $color = $datos["color"] ?? "#E8794A";
 
         if ($titulo === "" || $fecha === "") {
+            http_response_code(400);
             echo json_encode(["error" => "Faltan campos obligatorios (titulo, fecha)"]);
             break;
         }
@@ -51,6 +52,7 @@ switch ($accion) {
         if ($stmt->execute()) {
             echo json_encode(["exito" => true, "id" => $stmt->insert_id]);
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt->error]);
         }
         $stmt->close();
@@ -65,6 +67,7 @@ switch ($accion) {
         $color = $datos["color"] ?? "#E8794A";
 
         if ($id === null || $titulo === "" || $fecha === "") {
+            http_response_code(400);
             echo json_encode(["error" => "Faltan campos obligatorios (id, titulo, fecha)"]);
             break;
         }
@@ -77,6 +80,7 @@ switch ($accion) {
         if ($stmt->execute()) {
             echo json_encode(["exito" => true]);
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt->error]);
         }
         $stmt->close();
@@ -86,6 +90,7 @@ switch ($accion) {
         $id = $datos["id"] ?? null;
 
         if ($id === null) {
+            http_response_code(400);
             echo json_encode(["error" => "Falta el id"]);
             break;
         }
@@ -96,6 +101,7 @@ switch ($accion) {
         if ($stmt->execute()) {
             echo json_encode(["exito" => true]);
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt->error]);
         }
         $stmt->close();
@@ -119,6 +125,7 @@ switch ($accion) {
         $nombre = $datos["nombre"] ?? "";
         $color = $datos["color"] ?? "#4A4A4A";
         if ($nombre === "") {
+            http_response_code(400);
             echo json_encode(["error" => "Falta el nombre"]);
             break;
         }
@@ -127,6 +134,7 @@ switch ($accion) {
         if ($stmt->execute()) {
             echo json_encode(["exito" => true]);
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt->error]);
         }
         $stmt->close();
@@ -154,6 +162,7 @@ switch ($accion) {
         $creado_por = $datos["creado_por"] ?? null;
 
         if ($titulo === "") {
+            http_response_code(400);
             echo json_encode(["error" => "Falta el titulo"]);
             break;
         }
@@ -166,6 +175,7 @@ switch ($accion) {
         if ($stmt->execute()) {
             echo json_encode(["exito" => true, "id" => $stmt->insert_id]);
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt->error]);
         }
         $stmt->close();
@@ -180,6 +190,7 @@ switch ($accion) {
         $puntuacion = isset($datos["puntuacion"]) ? (int) $datos["puntuacion"] : null;
 
         if ($id === null || $titulo === "") {
+            http_response_code(400);
             echo json_encode(["error" => "Faltan campos obligatorios (id, titulo)"]);
             break;
         }
@@ -192,6 +203,7 @@ switch ($accion) {
         if ($stmt->execute()) {
             echo json_encode(["exito" => true]);
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt->error]);
         }
         $stmt->close();
@@ -201,6 +213,7 @@ switch ($accion) {
         $id = $datos["id"] ?? null;
 
         if ($id === null) {
+            http_response_code(400);
             echo json_encode(["error" => "Falta el id"]);
             break;
         }
@@ -211,6 +224,7 @@ switch ($accion) {
         if ($stmt->execute()) {
             echo json_encode(["exito" => true]);
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt->error]);
         }
         $stmt->close();
@@ -225,6 +239,7 @@ switch ($accion) {
         $nombre = $datos["nombre"] ?? "Usuario";
 
         if ($dispositivo_id === "") {
+            http_response_code(400);
             echo json_encode(["error" => "Falta dispositivo_id"]);
             break;
         }
@@ -249,6 +264,7 @@ switch ($accion) {
             echo json_encode(["exito" => true, "dispositivo" => $result]);
             $stmt2->close();
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt->error]);
         }
         $stmt->close();
@@ -260,6 +276,7 @@ switch ($accion) {
         $codigo = strtoupper(trim($datos["codigo"] ?? ""));
 
         if ($dispositivo_id === "" || $codigo === "") {
+            http_response_code(400);
             echo json_encode(["error" => "Faltan campos obligatorios"]);
             break;
         }
@@ -274,6 +291,7 @@ switch ($accion) {
         $stmt->close();
 
         if (!$result) {
+            http_response_code(400);
             echo json_encode(["error" => "Código no válido o es el tuyo propio"]);
             break;
         }
@@ -287,6 +305,7 @@ switch ($accion) {
         if ($stmt2->execute()) {
             echo json_encode(["exito" => true]);
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt2->error]);
         }
         $stmt2->close();
@@ -297,6 +316,7 @@ switch ($accion) {
         $dispositivo_id = $datos["dispositivo_id"] ?? "";
 
         if ($dispositivo_id === "") {
+            http_response_code(400);
             echo json_encode(["error" => "Falta dispositivo_id"]);
             break;
         }
@@ -312,6 +332,7 @@ switch ($accion) {
         if ($result) {
             echo json_encode(["exito" => true, "dispositivo" => $result]);
         } else {
+            http_response_code(404);
             echo json_encode(["error" => "Dispositivo no encontrado"]);
         }
         break;
@@ -334,6 +355,7 @@ switch ($accion) {
         $semana_inicio = $datos["semana_inicio"] ?? "";
 
         if ($semana_inicio === "") {
+            http_response_code(400);
             echo json_encode(["error" => "Falta semana_inicio"]);
             break;
         }
@@ -384,6 +406,7 @@ switch ($accion) {
         $contenido = $datos["contenido"] ?? "";
 
         if ($fecha === "") {
+            http_response_code(400);
             echo json_encode(["error" => "Falta la fecha"]);
             break;
         }
@@ -399,6 +422,7 @@ switch ($accion) {
         if ($stmt->execute()) {
             echo json_encode(["exito" => true]);
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt->error]);
         }
         $stmt->close();
@@ -410,6 +434,7 @@ switch ($accion) {
         $titulo = $datos["titulo"] ?? "";
 
         if ($semana_inicio === "" || $titulo === "") {
+            http_response_code(400);
             echo json_encode(["error" => "Faltan campos obligatorios"]);
             break;
         }
@@ -423,6 +448,7 @@ switch ($accion) {
         if ($stmt->execute()) {
             echo json_encode(["exito" => true, "id" => $stmt->insert_id]);
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt->error]);
         }
         $stmt->close();
@@ -434,6 +460,7 @@ switch ($accion) {
         $completado = $datos["completado"] ?? 0;
 
         if ($id === null) {
+            http_response_code(400);
             echo json_encode(["error" => "Falta el id"]);
             break;
         }
@@ -446,6 +473,7 @@ switch ($accion) {
         if ($stmt->execute()) {
             echo json_encode(["exito" => true]);
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt->error]);
         }
         $stmt->close();
@@ -456,6 +484,7 @@ switch ($accion) {
         $id = $datos["id"] ?? null;
 
         if ($id === null) {
+            http_response_code(400);
             echo json_encode(["error" => "Falta el id"]);
             break;
         }
@@ -468,12 +497,14 @@ switch ($accion) {
         if ($stmt->execute()) {
             echo json_encode(["exito" => true]);
         } else {
+            http_response_code(500);
             echo json_encode(["error" => $stmt->error]);
         }
         $stmt->close();
         break;
 
     default:
+        http_response_code(400);
         echo json_encode(["error" => "Accion no reconocida: $accion"]);
         break;
 }

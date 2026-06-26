@@ -39,6 +39,8 @@ void mostrarFormularioNota(
                     .map((t) => t['nombre'] as String)
                     .toList();
               });
+            }).catchError((_) {
+              // Si falla la carga de tipos, se continúa solo con los fijos
             });
           }
 
@@ -217,46 +219,35 @@ void mostrarFormularioNota(
                         ),
                       ),
                       onPressed: () async {
-                        debugPrint('Tipo seleccionado: "$tipoSeleccionado"');
-                        debugPrint('Título: "${tituloController.text.trim()}"');
-                        debugPrint('Tipo vacío: ${tipoSeleccionado.isEmpty}');
+                        if (tituloController.text.trim().isEmpty) return;
+                        if (tipoSeleccionado.isEmpty) return;
 
-                        if (tituloController.text.trim().isEmpty) {
-                          debugPrint('SALIENDO: título vacío');
-                          return;
-                        }
-                        if (tipoSeleccionado.isEmpty) {
-                          debugPrint('SALIENDO: tipo vacío');
-                          return;
-                        }
-                        debugPrint('Pasando validaciones, creando nota...');
-
-                        // Si es un tipo personalizado nuevo, lo guardamos
-                        final tiposFijosValores = [
-                          'peli',
-                          'serie',
-                          'idea_cita',
-                        ];
-                        if (!tiposFijosValores.contains(tipoSeleccionado) &&
-                            tipoSeleccionado.isNotEmpty) {
-                          await ApiService.crearTipo(
-                            nombre: tipoSeleccionado,
-                            color: colorAHex(
-                              colorTipoPersonalizado,
-                            ), 
+                        try {
+                          // Si es un tipo personalizado nuevo, lo guardamos
+                          final tiposFijosValores = [
+                            'peli',
+                            'serie',
+                            'idea_cita',
+                          ];
+                          if (!tiposFijosValores.contains(tipoSeleccionado) &&
+                              tipoSeleccionado.isNotEmpty) {
+                            await ApiService.crearTipo(
+                              nombre: tipoSeleccionado,
+                              color: colorAHex(colorTipoPersonalizado),
+                            );
+                          }
+                          await ApiService.crearNota(
+                            titulo: tituloController.text.trim(),
+                            tipo: tipoSeleccionado,
+                            descripcion: descripcionController.text.trim().isEmpty
+                                ? null
+                                : descripcionController.text.trim(),
                           );
+                          await onGuardado();
+                          if (context.mounted) Navigator.pop(context);
+                        } catch (_) {
+                          // Error de red — el sheet se queda abierto
                         }
-
-                        final respuesta = await ApiService.crearNota(
-                          titulo: tituloController.text.trim(),
-                          tipo: tipoSeleccionado,
-                          descripcion: descripcionController.text.trim().isEmpty
-                              ? null
-                              : descripcionController.text.trim(),
-                        );
-                        debugPrint('Respuesta backend: $respuesta');
-                        await onGuardado();
-                        if (context.mounted) Navigator.pop(context);
                       },
                       child: const Text(
                         'Guardar nota',

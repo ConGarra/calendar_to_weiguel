@@ -5,13 +5,22 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static String get baseUrl => dotenv.env['BASE_URL'] ?? '';
 
-  static Future<Map<String, dynamic>> _post(Map<String, dynamic> body) async {
-    final res = await http.post(
-      Uri.parse(baseUrl),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode(body),
-    );
-    return json.decode(res.body);
+  static Future<dynamic> _post(Map<String, dynamic> body) async {
+    try {
+      final res = await http.post(
+        Uri.parse(baseUrl),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(body),
+      ).timeout(const Duration(seconds: 10));
+      return json.decode(res.body);
+    } on FormatException {
+      throw Exception('Respuesta inválida del servidor');
+    }
+  }
+
+  // Helper para métodos que esperan un Map como respuesta
+  static Future<Map<String, dynamic>> _postMap(Map<String, dynamic> body) async {
+    return (await _post(body)) as Map<String, dynamic>;
   }
 
   // -------------------------------------------------------
@@ -19,12 +28,7 @@ class ApiService {
   // -------------------------------------------------------
 
   static Future<List<dynamic>> listarEventos() async {
-    final res = await http.post(
-      Uri.parse(baseUrl),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode({"accion": "listar_eventos"}),
-    );
-    return json.decode(res.body);
+    return (await _post({"accion": "listar_eventos"})) as List<dynamic>;
   }
 
   static Future<Map<String, dynamic>> crearEvento({
@@ -35,7 +39,7 @@ class ApiService {
     String? creadoPor,
     String? color,
   }) async {
-    return _post({
+    return _postMap({
       "accion": "crear_evento",
       "titulo": titulo,
       "fecha": fecha,
@@ -54,7 +58,7 @@ class ApiService {
     int? recordatorioMinutos,
     String? color,
   }) async {
-    return _post({
+    return _postMap({
       "accion": "editar_evento",
       "id": id,
       "titulo": titulo,
@@ -66,7 +70,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> borrarEvento({required int id}) async {
-    return _post({"accion": "borrar_evento", "id": id});
+    return _postMap({"accion": "borrar_evento", "id": id});
   }
 
   // -------------------------------------------------------
@@ -74,12 +78,7 @@ class ApiService {
   // -------------------------------------------------------
 
   static Future<List<dynamic>> listarNotas() async {
-    final res = await http.post(
-      Uri.parse(baseUrl),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode({"accion": "listar_notas"}),
-    );
-    return json.decode(res.body);
+    return (await _post({"accion": "listar_notas"})) as List<dynamic>;
   }
 
   static Future<Map<String, dynamic>> crearNota({
@@ -88,7 +87,7 @@ class ApiService {
     String? descripcion,
     String? creadoPor,
   }) async {
-    return _post({
+    return _postMap({
       "accion": "crear_nota",
       "titulo": titulo,
       "tipo": tipo,
@@ -105,7 +104,7 @@ class ApiService {
     int completado = 0,
     int? puntuacion,
   }) async {
-    return _post({
+    return _postMap({
       "accion": "editar_nota",
       "id": id,
       "titulo": titulo,
@@ -117,7 +116,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> borrarNota({required int id}) async {
-    return _post({"accion": "borrar_nota", "id": id});
+    return _postMap({"accion": "borrar_nota", "id": id});
   }
 
   // -------------------------------------------------------
@@ -129,7 +128,7 @@ class ApiService {
   static Future<Map<String, dynamic>> obtenerSemanaPlanner({
     required String semanaInicio,
   }) async {
-    return _post({
+    return _postMap({
       "accion": "obtener_semana_planner",
       "semana_inicio": semanaInicio,
     });
@@ -140,7 +139,7 @@ class ApiService {
     required String fecha,
     required String contenido,
   }) async {
-    return _post({
+    return _postMap({
       "accion": "guardar_dia_planner",
       "fecha": fecha,
       "contenido": contenido,
@@ -152,7 +151,7 @@ class ApiService {
     required String semanaInicio,
     required String titulo,
   }) async {
-    return _post({
+    return _postMap({
       "accion": "crear_tarea_planner",
       "semana_inicio": semanaInicio,
       "titulo": titulo,
@@ -164,7 +163,7 @@ class ApiService {
     required int id,
     required int completado,
   }) async {
-    return _post({
+    return _postMap({
       "accion": "toggle_tarea_planner",
       "id": id,
       "completado": completado,
@@ -175,26 +174,21 @@ class ApiService {
   static Future<Map<String, dynamic>> borrarTareaPlanner({
     required int id,
   }) async {
-    return _post({"accion": "borrar_tarea_planner", "id": id});
+    return _postMap({"accion": "borrar_tarea_planner", "id": id});
   }
   // -------------------------------------------------------
   // TIPOS DE NOTA
   // -------------------------------------------------------
 
   static Future<List<dynamic>> listarTipos() async {
-    final res = await http.post(
-      Uri.parse(baseUrl),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode({"accion": "listar_tipos"}),
-    );
-    return json.decode(res.body);
+    return (await _post({"accion": "listar_tipos"})) as List<dynamic>;
   }
 
   static Future<Map<String, dynamic>> crearTipo({
     required String nombre,
     String color = '#4A4A4A',
   }) async {
-    return _post({"accion": "crear_tipo", "nombre": nombre, "color": color});
+    return _postMap({"accion": "crear_tipo", "nombre": nombre, "color": color});
   }
   // -------------------------------------------------------
   // DISPOSITIVOS / VINCULACIÓN
@@ -204,7 +198,7 @@ class ApiService {
     required String dispositivoId,
     required String nombre,
   }) async {
-    return _post({
+    return _postMap({
       "accion": "registrar_dispositivo",
       "dispositivo_id": dispositivoId,
       "nombre": nombre,
@@ -215,7 +209,7 @@ class ApiService {
     required String dispositivoId,
     required String codigo,
   }) async {
-    return _post({
+    return _postMap({
       "accion": "vincular_dispositivo",
       "dispositivo_id": dispositivoId,
       "codigo": codigo,
@@ -225,7 +219,7 @@ class ApiService {
   static Future<Map<String, dynamic>> obtenerDispositivo({
     required String dispositivoId,
   }) async {
-    return _post({
+    return _postMap({
       "accion": "obtener_dispositivo",
       "dispositivo_id": dispositivoId,
     });

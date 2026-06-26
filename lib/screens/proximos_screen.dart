@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/color_utils.dart';
 import '../widgets/evento_card.dart';
 import '../widgets/evento_detalle_sheet.dart';
+import '../widgets/error_red_widget.dart';
 
 class ProximosScreen extends StatefulWidget {
   const ProximosScreen({super.key});
@@ -14,14 +16,30 @@ class ProximosScreen extends StatefulWidget {
 class _ProximosScreenState extends State<ProximosScreen> {
   List<dynamic> _eventos = [];
   bool _cargando = true;
+  bool _errorRed = false;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _cargarEventos();
+    _timer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _cargarEventos(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _cargarEventos() async {
+    setState(() {
+      _errorRed = false;
+      _cargando = true;
+    });
     try {
       final datos = await ApiService.listarEventos();
       setState(() {
@@ -30,7 +48,10 @@ class _ProximosScreenState extends State<ProximosScreen> {
         _cargando = false;
       });
     } catch (e) {
-      setState(() => _cargando = false);
+      setState(() {
+        _cargando = false;
+        _errorRed = true;
+      });
     }
   }
 
@@ -81,7 +102,9 @@ class _ProximosScreenState extends State<ProximosScreen> {
         decoration: const BoxDecoration(gradient: kGradienteFondo),
         child: _cargando
             ? const Center(child: CircularProgressIndicator())
-            : _eventos.isEmpty
+            : _errorRed
+                ? ErrorRedWidget(onReintentar: _cargarEventos)
+                : _eventos.isEmpty
                 ? const Center(
                     child: Text(
                       'No hay eventos próximos',

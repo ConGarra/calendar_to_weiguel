@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/color_utils.dart';
@@ -5,6 +6,7 @@ import '../widgets/nota_form_sheet.dart';
 import '../widgets/nota_detalle_sheet.dart';
 import '../widgets/nota_card_pendiente.dart';
 import '../widgets/nota_card_completada.dart';
+import '../widgets/error_red_widget.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -16,29 +18,41 @@ class NotesScreen extends StatefulWidget {
 class _NotesScreenState extends State<NotesScreen> {
   List<dynamic> _notas = [];
   bool _cargando = true;
+  bool _errorRed = false;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _cargarNotas();
+    _timer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _cargarNotas(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _cargarNotas() async {
+    setState(() {
+      _errorRed = false;
+      _cargando = true;
+    });
     try {
       final datos = await ApiService.listarNotas();
-      debugPrint('Notas cargadas: ${datos.length}');
-      for (final n in datos) {
-        debugPrint(
-          '  - ${n['titulo']} completado: ${n['completado']} puntuacion: ${n['puntuacion']}',
-        );
-      }
       setState(() {
         _notas = datos;
         _cargando = false;
       });
-    } catch (e) {
-      debugPrint('Error cargando notas: $e');
-      setState(() => _cargando = false);
+    } catch (_) {
+      setState(() {
+        _cargando = false;
+        _errorRed = true;
+      });
     }
   }
 
@@ -47,17 +61,21 @@ class _NotesScreenState extends State<NotesScreen> {
 
     // Si ya está completada, simplemente la desmarcamos
     if (yaCompletado) {
-      await ApiService.editarNota(
-        id: int.parse(nota['id'].toString()),
-        titulo: nota['titulo'] as String,
-        tipo: nota['tipo'] as String,
-        descripcion: nota['descripcion'] as String?,
-        completado: 0,
-        puntuacion: nota['puntuacion'] != null
-            ? int.tryParse(nota['puntuacion'].toString())
-            : null,
-      );
-      await _cargarNotas();
+      try {
+        await ApiService.editarNota(
+          id: int.parse(nota['id'].toString()),
+          titulo: nota['titulo'] as String,
+          tipo: nota['tipo'] as String,
+          descripcion: nota['descripcion'] as String?,
+          completado: 0,
+          puntuacion: nota['puntuacion'] != null
+              ? int.tryParse(nota['puntuacion'].toString())
+              : null,
+        );
+        await _cargarNotas();
+      } catch (_) {
+        // Error de red al desmarcar
+      }
       return;
     }
 
@@ -127,18 +145,19 @@ class _NotesScreenState extends State<NotesScreen> {
     );
 
     if (confirmar != true) return;
-    debugPrint('Completando con puntuacion: $puntuacion');
-    debugPrint('Puntuacion enviada: ${puntuacion == -1 ? null : puntuacion}');
-    final respuesta = await ApiService.editarNota(
-      id: int.parse(nota['id'].toString()),
-      titulo: nota['titulo'] as String,
-      tipo: nota['tipo'] as String,
-      descripcion: nota['descripcion'] as String?,
-      completado: 1,
-      puntuacion: puntuacion == -1 ? null : puntuacion,
-    );
-    debugPrint('Respuesta: $respuesta');
-    await _cargarNotas();
+    try {
+      await ApiService.editarNota(
+        id: int.parse(nota['id'].toString()),
+        titulo: nota['titulo'] as String,
+        tipo: nota['tipo'] as String,
+        descripcion: nota['descripcion'] as String?,
+        completado: 1,
+        puntuacion: puntuacion == -1 ? null : puntuacion,
+      );
+      await _cargarNotas();
+    } catch (_) {
+      // Error de red al completar
+    }
   }
 
   // Agrupa las notas por tipo, separando pendientes de completadas
@@ -193,7 +212,9 @@ class _NotesScreenState extends State<NotesScreen> {
         decoration: const BoxDecoration(gradient: kGradienteFondo),
         child: _cargando
             ? const Center(child: CircularProgressIndicator())
-            : _notas.isEmpty
+            : _errorRed
+                ? ErrorRedWidget(onReintentar: _cargarNotas)
+                : _notas.isEmpty
             ? const Center(
                 child: Text(
                   'Sin notas todavía\nPulsa + para añadir',

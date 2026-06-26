@@ -43,23 +43,30 @@ class _AjustesScreenState extends State<AjustesScreen> {
       _mostrarSnackbar('Introduce un código de 6 caracteres');
       return;
     }
-
-    final respuesta = await DispositivoService.vincular(codigo: codigo);
-    if (respuesta['exito'] == true) {
-      _mostrarSnackbar('¡Vinculado correctamente! 🎉');
-      await _cargarDatos();
-    } else {
-      _mostrarSnackbar(respuesta['error'] as String? ?? 'Error al vincular');
+    try {
+      final respuesta = await DispositivoService.vincular(codigo: codigo);
+      if (respuesta['exito'] == true) {
+        _mostrarSnackbar('¡Vinculado correctamente! 🎉');
+        await _cargarDatos();
+      } else {
+        _mostrarSnackbar(respuesta['error'] as String? ?? 'Error al vincular');
+      }
+    } catch (_) {
+      _mostrarSnackbar('Sin conexión con el servidor');
     }
   }
 
   Future<void> _guardarNombre() async {
     final nombre = _nombreController.text.trim();
     if (nombre.isEmpty) return;
-    await DispositivoService.guardarNombre(nombre);
-    await SesionService.actualizarRol(nombre); 
-    _mostrarSnackbar('Nombre guardado');
-    await _cargarDatos();
+    try {
+      await DispositivoService.guardarNombre(nombre);
+      await SesionService.actualizarRol(nombre);
+      _mostrarSnackbar('Nombre guardado');
+      await _cargarDatos();
+    } catch (_) {
+      _mostrarSnackbar('Sin conexión con el servidor');
+    }
   }
 
   void _mostrarSnackbar(String mensaje) {

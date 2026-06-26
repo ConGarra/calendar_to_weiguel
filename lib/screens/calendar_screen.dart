@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../services/api_service.dart';
@@ -6,6 +7,7 @@ import '../widgets/calendar_cell.dart';
 import '../widgets/evento_card.dart';
 import '../widgets/evento_form_sheet.dart';
 import '../widgets/evento_detalle_sheet.dart';
+import '../widgets/error_red_widget.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -19,15 +21,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
   DateTime? _selectedDay;
   List<dynamic> _eventos = [];
   bool _cargando = true;
+  bool _errorRed = false;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _selectedDay = DateTime.now();
     _cargarEventos();
+    _timer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _cargarEventos(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _cargarEventos() async {
+    setState(() {
+      _errorRed = false;
+      _cargando = true;
+    });
     try {
       final datos = await ApiService.listarEventos();
       setState(() {
@@ -35,7 +53,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
         _cargando = false;
       });
     } catch (e) {
-      setState(() => _cargando = false);
+      setState(() {
+        _cargando = false;
+        _errorRed = true;
+      });
     }
   }
 
@@ -84,7 +105,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
         decoration: const BoxDecoration(gradient: kGradienteFondo),
         child: _cargando
             ? const Center(child: CircularProgressIndicator())
-            : Column(
+            : _errorRed
+                ? ErrorRedWidget(onReintentar: _cargarEventos)
+                : Column(
                 children: [
                   _buildCalendario(),
                   const Divider(height: 1),
