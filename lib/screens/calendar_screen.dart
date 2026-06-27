@@ -8,6 +8,7 @@ import '../widgets/evento_card.dart';
 import '../widgets/evento_form_sheet.dart';
 import '../widgets/evento_detalle_sheet.dart';
 import '../widgets/error_red_widget.dart';
+import '../services/dispositivo_service.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -22,6 +23,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   List<dynamic> _eventos = [];
   bool _cargando = true;
   bool _errorRed = false;
+  bool _noVinculado = false;
   Timer? _timer;
 
   @override
@@ -42,10 +44,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<void> _cargarEventos() async {
-    setState(() {
-      _errorRed = false;
-      _cargando = true;
-    });
+    // Si el dispositivo no está vinculado, no llamamos al servidor
+    final vinculado = await DispositivoService.estaVinculado();
+    if (!vinculado) {
+      setState(() { _cargando = false; _noVinculado = true; });
+      return;
+    }
+    setState(() { _errorRed = false; _cargando = true; _noVinculado = false; });
     try {
       final datos = await ApiService.listarEventos();
       setState(() {
@@ -91,23 +96,39 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: kColorPrimario,
-        foregroundColor: Colors.white,
-        onPressed: () => mostrarFormularioEvento(
-          context,
-          fechaInicial: _selectedDay ?? DateTime.now(),
-          onGuardado: _cargarEventos,
-        ),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _noVinculado
+          ? null
+          : FloatingActionButton(
+              backgroundColor: kColorPrimario,
+              foregroundColor: Colors.white,
+              onPressed: () => mostrarFormularioEvento(
+                context,
+                fechaInicial: _selectedDay ?? DateTime.now(),
+                onGuardado: _cargarEventos,
+              ),
+              child: const Icon(Icons.add),
+            ),
       body: Container(
         decoration: const BoxDecoration(gradient: kGradienteFondo),
         child: _cargando
             ? const Center(child: CircularProgressIndicator())
-            : _errorRed
-                ? ErrorRedWidget(onReintentar: _cargarEventos)
-                : Column(
+            : _noVinculado
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Text(
+                        'Vincúlate con tu pareja desde Ajustes para ver el calendario compartido 💑',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: kColorTextoSecundario,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  )
+                : _errorRed
+                    ? ErrorRedWidget(onReintentar: _cargarEventos)
+                    : Column(
                 children: [
                   _buildCalendario(),
                   const Divider(height: 1),

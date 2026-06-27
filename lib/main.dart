@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/calendar_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/nota_screen.dart';
 import 'utils/color_utils.dart';
 import 'screens/proximos_screen.dart';
@@ -16,27 +17,31 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await initializeDateFormatting('es_ES', null);
-  try {
-    await DispositivoService.inicializar(nombre: 'Usuario');
-  } catch (_) {
-    // Si el servidor no está disponible al arrancar, la app sigue cargando
-  }
-
   await NotificacionService.inicializar();
 
+  // Si el nombre es null o 'Usuario' (valor por defecto antiguo),
+  // el usuario nunca pasó por el onboarding → mostramos la pantalla de bienvenida.
+  final nombre = await DispositivoService.obtenerNombre();
+  final debeOnboarding = nombre == null || nombre == 'Usuario';
+
   bool esSandra = false;
-  try {
-    esSandra = await SesionService.esDispositivoDeSandra();
-  } catch (_) {
-    // Si falla la consulta, se asume que no es Sandra
+  if (!debeOnboarding) {
+    // Usuario ya configurado: sincronizar dispositivo con el servidor
+    try {
+      await DispositivoService.inicializar(nombre: nombre!);
+    } catch (_) {}
+    try {
+      esSandra = await SesionService.esDispositivoDeSandra();
+    } catch (_) {}
   }
 
-  runApp(MyApp(esSandra: esSandra));
+  runApp(MyApp(debeOnboarding: debeOnboarding, esSandra: esSandra));
 }
 
 class MyApp extends StatelessWidget {
+  final bool debeOnboarding;
   final bool esSandra;
-  const MyApp({super.key, required this.esSandra});
+  const MyApp({super.key, required this.debeOnboarding, required this.esSandra});
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +58,10 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: kColorPrimario),
       ),
-      home: MainScreen(esSandra: esSandra),
+      // Si aún no hizo onboarding → OnboardingScreen; si no → MainScreen normal
+      home: debeOnboarding
+          ? const OnboardingScreen()
+          : MainScreen(esSandra: esSandra),
     );
   }
 }

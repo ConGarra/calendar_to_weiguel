@@ -248,8 +248,9 @@ switch ($accion) {
         $codigo = strtoupper(substr(md5(uniqid($dispositivo_id, true)), 0, 6));
 
         $stmt = $conexion->prepare(
-            "INSERT IGNORE INTO dispositivos (dispositivo_id, nombre, codigo_vinculo)
-         VALUES (?, ?, ?)"
+            "INSERT INTO dispositivos (dispositivo_id, nombre, codigo_vinculo)
+             VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE nombre = VALUES(nombre)"
         );
         $stmt->bind_param("sss", $dispositivo_id, $nombre, $codigo);
 

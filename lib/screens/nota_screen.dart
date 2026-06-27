@@ -7,6 +7,7 @@ import '../widgets/nota_detalle_sheet.dart';
 import '../widgets/nota_card_pendiente.dart';
 import '../widgets/nota_card_completada.dart';
 import '../widgets/error_red_widget.dart';
+import '../services/dispositivo_service.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -19,6 +20,7 @@ class _NotesScreenState extends State<NotesScreen> {
   List<dynamic> _notas = [];
   bool _cargando = true;
   bool _errorRed = false;
+  bool _noVinculado = false;
   Timer? _timer;
 
   @override
@@ -38,10 +40,13 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   Future<void> _cargarNotas() async {
-    setState(() {
-      _errorRed = false;
-      _cargando = true;
-    });
+    // Si el dispositivo no está vinculado, no llamamos al servidor
+    final vinculado = await DispositivoService.estaVinculado();
+    if (!vinculado) {
+      setState(() { _cargando = false; _noVinculado = true; });
+      return;
+    }
+    setState(() { _errorRed = false; _cargando = true; _noVinculado = false; });
     try {
       final datos = await ApiService.listarNotas();
       setState(() {
@@ -201,20 +206,36 @@ class _NotesScreenState extends State<NotesScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: kColorPrimario,
-        foregroundColor: Colors.white,
-        onPressed: () =>
-            mostrarFormularioNota(context, onGuardado: _cargarNotas),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _noVinculado
+          ? null
+          : FloatingActionButton(
+              backgroundColor: kColorPrimario,
+              foregroundColor: Colors.white,
+              onPressed: () =>
+                  mostrarFormularioNota(context, onGuardado: _cargarNotas),
+              child: const Icon(Icons.add),
+            ),
       body: Container(
         decoration: const BoxDecoration(gradient: kGradienteFondo),
         child: _cargando
             ? const Center(child: CircularProgressIndicator())
-            : _errorRed
-                ? ErrorRedWidget(onReintentar: _cargarNotas)
-                : _notas.isEmpty
+            : _noVinculado
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Text(
+                        'Vincúlate con tu pareja desde Ajustes para ver las notas compartidas 💑',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: kColorTextoSecundario,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  )
+                : _errorRed
+                    ? ErrorRedWidget(onReintentar: _cargarNotas)
+                    : _notas.isEmpty
             ? const Center(
                 child: Text(
                   'Sin notas todavía\nPulsa + para añadir',

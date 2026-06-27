@@ -5,6 +5,7 @@ import '../utils/color_utils.dart';
 import '../widgets/evento_card.dart';
 import '../widgets/evento_detalle_sheet.dart';
 import '../widgets/error_red_widget.dart';
+import '../services/dispositivo_service.dart';
 
 class ProximosScreen extends StatefulWidget {
   const ProximosScreen({super.key});
@@ -17,6 +18,7 @@ class _ProximosScreenState extends State<ProximosScreen> {
   List<dynamic> _eventos = [];
   bool _cargando = true;
   bool _errorRed = false;
+  bool _noVinculado = false;
   Timer? _timer;
 
   @override
@@ -36,10 +38,13 @@ class _ProximosScreenState extends State<ProximosScreen> {
   }
 
   Future<void> _cargarEventos() async {
-    setState(() {
-      _errorRed = false;
-      _cargando = true;
-    });
+    // Si el dispositivo no está vinculado, no llamamos al servidor
+    final vinculado = await DispositivoService.estaVinculado();
+    if (!vinculado) {
+      setState(() { _cargando = false; _noVinculado = true; });
+      return;
+    }
+    setState(() { _errorRed = false; _cargando = true; _noVinculado = false; });
     try {
       final datos = await ApiService.listarEventos();
       setState(() {
@@ -102,9 +107,23 @@ class _ProximosScreenState extends State<ProximosScreen> {
         decoration: const BoxDecoration(gradient: kGradienteFondo),
         child: _cargando
             ? const Center(child: CircularProgressIndicator())
-            : _errorRed
-                ? ErrorRedWidget(onReintentar: _cargarEventos)
-                : _eventos.isEmpty
+            : _noVinculado
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Text(
+                        'Vincúlate con tu pareja desde Ajustes para ver los próximos eventos 💑',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: kColorTextoSecundario,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  )
+                : _errorRed
+                    ? ErrorRedWidget(onReintentar: _cargarEventos)
+                    : _eventos.isEmpty
                 ? const Center(
                     child: Text(
                       'No hay eventos próximos',
